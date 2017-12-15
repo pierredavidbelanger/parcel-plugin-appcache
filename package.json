@@ -1,7 +1,7 @@
 {
   "name": "parcel-plugin-appcache",
   "description": "Parcel plugin for generating an appcache manifest",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "repository": "https://github.com/pierredavidbelanger/parcel-plugin-appcache.git",
   "license": "MIT",
   "author": "Pierre-David Bélanger <pierredavidbelanger@gmail.com>",
