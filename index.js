@@ -16,7 +16,7 @@ module.exports = (bundler) => {
 
         logger.status('🔧', 'Fix the HTML');
 
-        streamifier.createReadStream(bundle.entryAsset.generated.html)
+        streamifier.createReadStream(fs.readFileSync(bundleName))
             .pipe(am.createFixer({manifest: manifestName}))
             .pipe(fs.createWriteStream(bundleName))
             .on('finish', () => {
