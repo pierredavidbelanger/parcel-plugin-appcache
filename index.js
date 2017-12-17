@@ -10,6 +10,7 @@ module.exports = (bundler) => {
     bundler.on('bundled', (bundle) => {
 
         const bundleName = bundle.name;
+        const bundleFilename = path.basename(bundleName);
         const bundleExt = path.extname(bundleName);
         const bundleBasename = path.basename(bundleName, bundleExt);
         const manifestName = `${bundleBasename}.appcache`;
@@ -22,7 +23,7 @@ module.exports = (bundler) => {
             .on('finish', () => {
 
                 const bundleDir = path.dirname(bundleName);
-                const inputGlob = path.join(bundleDir, `/**/!(${manifestName})`);
+                const inputGlob = path.join(bundleDir, `/**/!(${bundleFilename}|${manifestName})`);
                 const outputFile = path.join(bundleDir, manifestName);
 
                 logger.status('📃', 'Generate the manifest');
