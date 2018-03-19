@@ -5,8 +5,6 @@ const am = require('appcache-manifest');
 
 module.exports = (bundler) => {
 
-    const logger = bundler.logger;
-
     bundler.on('bundled', (bundle) => {
 
         const bundleName = bundle.name;
@@ -14,8 +12,6 @@ module.exports = (bundler) => {
         const bundleExt = path.extname(bundleName);
         const bundleBasename = path.basename(bundleName, bundleExt);
         const manifestName = `${bundleBasename}.appcache`;
-
-        logger.status('🔧', 'Fix the HTML');
 
         streamifier.createReadStream(fs.readFileSync(bundleName))
             .pipe(am.createFixer({manifest: manifestName}))
@@ -25,8 +21,6 @@ module.exports = (bundler) => {
                 const bundleDir = path.dirname(bundleName);
                 const inputGlob = path.join(bundleDir, `/**/!(${bundleFilename}|${manifestName})`);
                 const outputFile = path.join(bundleDir, manifestName);
-
-                logger.status('📃', 'Generate the manifest');
 
                 am.generate(inputGlob, {networkStar: true, stamp: true})
                     .pipe(fs.createWriteStream(outputFile));
