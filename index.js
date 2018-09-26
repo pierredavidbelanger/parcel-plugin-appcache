@@ -3,6 +3,15 @@ const fs = require('fs');
 const streamifier = require('streamifier');
 const am = require('appcache-manifest');
 
+function reduceBundles(bundles) {
+    const result = [];
+    bundles.forEach(function(bundle){
+        result.push(bundle.name);
+        result.concat(reduceBundles(bundle.childBundles));
+    });
+    return result;
+}
+
 module.exports = (bundler) => {
 
     bundler.on('bundled', (bundle) => {
@@ -19,7 +28,7 @@ module.exports = (bundler) => {
             .on('finish', () => {
 
                 const bundleDir = path.dirname(bundleName);
-                const inputGlob = path.join(bundleDir, `/**/!(${bundleFilename}|${manifestName})`);
+                const inputGlob = reduceBundles(bundle.childBundles);
                 const outputFile = path.join(bundleDir, manifestName);
 
                 am.generate(inputGlob, {networkStar: true, stamp: true})
