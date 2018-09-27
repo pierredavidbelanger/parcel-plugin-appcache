@@ -12,34 +12,42 @@ function reduceBundles(bundles) {
     return result;
 }
 
-module.exports = (bundler) => {
+function generateManifestForBundle(bundle) {
 
-    bundler.on('bundled', (bundle) => {
-
-        let publicURL = bundle.entryAsset
-            && bundle.entryAsset.options
-            && bundle.entryAsset.options.publicURL
-            || '';
-        if (!publicURL.endsWith('/')) {
-            publicURL += '/';
+    if (bundle.name === undefined) {
+        if (bundle.childBundles) {
+            bundle.childBundles.forEach(generateManifestForBundle);
         }
-        const bundleName = bundle.name;
-        const bundleExt = path.extname(bundleName);
-        const bundleBasename = path.basename(bundleName, bundleExt);
-        const manifestName = `${bundleBasename}.appcache`;
+        return;
+    }
 
-        streamifier.createReadStream(fs.readFileSync(bundleName))
-            .pipe(am.createFixer({manifest: `${publicURL}${manifestName}`}))
-            .pipe(fs.createWriteStream(bundleName))
-            .on('finish', () => {
+    let publicURL = bundle.entryAsset
+        && bundle.entryAsset.options
+        && bundle.entryAsset.options.publicURL
+        || '';
+    if (!publicURL.endsWith('/')) {
+        publicURL += '/';
+    }
+    const bundleName = bundle.name;
+    const bundleExt = path.extname(bundleName);
+    const bundleBasename = path.basename(bundleName, bundleExt);
+    const manifestName = `${bundleBasename}.appcache`;
 
-                const bundleDir = path.dirname(bundleName);
-                const inputGlob = reduceBundles(bundle.childBundles);
-                const outputFile = path.join(bundleDir, manifestName);
+    streamifier.createReadStream(fs.readFileSync(bundleName))
+        .pipe(am.createFixer({manifest: `${publicURL}${manifestName}`}))
+        .pipe(fs.createWriteStream(bundleName))
+        .on('finish', () => {
 
-                am.generate(inputGlob, {prefix: publicURL, networkStar: true, stamp: true})
-                    .pipe(fs.createWriteStream(outputFile));
+            const bundleDir = path.dirname(bundleName);
+            const inputGlob = reduceBundles(bundle.childBundles);
+            const outputFile = path.join(bundleDir, manifestName);
 
-            });
-    });
+            am.generate(inputGlob, {prefix: publicURL, networkStar: true, stamp: true})
+                .pipe(fs.createWriteStream(outputFile));
+
+        });
+}
+
+module.exports = (bundler) => {
+    bundler.on('bundled', generateManifestForBundle);
 };
