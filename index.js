@@ -5,7 +5,7 @@ const am = require('appcache-manifest');
 
 function reduceBundles(bundles) {
     const result = [];
-    bundles.forEach(function(bundle){
+    bundles.forEach(function (bundle) {
         result.push(bundle.name);
         result.concat(reduceBundles(bundle.childBundles));
     });
@@ -16,14 +16,20 @@ module.exports = (bundler) => {
 
     bundler.on('bundled', (bundle) => {
 
+        let publicURL = bundle.entryAsset
+            && bundle.entryAsset.options
+            && bundle.entryAsset.options.publicURL
+            || '';
+        if (!publicURL.endsWith('/')) {
+            publicURL += '/';
+        }
         const bundleName = bundle.name;
-        const bundleFilename = path.basename(bundleName);
         const bundleExt = path.extname(bundleName);
         const bundleBasename = path.basename(bundleName, bundleExt);
         const manifestName = `${bundleBasename}.appcache`;
 
         streamifier.createReadStream(fs.readFileSync(bundleName))
-            .pipe(am.createFixer({manifest: manifestName}))
+            .pipe(am.createFixer({manifest: `${publicURL}${manifestName}`}))
             .pipe(fs.createWriteStream(bundleName))
             .on('finish', () => {
 
@@ -31,7 +37,7 @@ module.exports = (bundler) => {
                 const inputGlob = reduceBundles(bundle.childBundles);
                 const outputFile = path.join(bundleDir, manifestName);
 
-                am.generate(inputGlob, {networkStar: true, stamp: true})
+                am.generate(inputGlob, {prefix: publicURL, networkStar: true, stamp: true})
                     .pipe(fs.createWriteStream(outputFile));
 
             });
