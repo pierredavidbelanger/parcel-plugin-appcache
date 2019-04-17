@@ -4,10 +4,10 @@ const streamifier = require('streamifier');
 const am = require('appcache-manifest');
 
 function reduceBundles(bundles) {
-    const result = [];
+    let result = [];
     bundles.forEach(function (bundle) {
         result.push(bundle.name);
-        result.concat(reduceBundles(bundle.childBundles));
+        result = result.concat(reduceBundles(bundle.childBundles));
     });
     return result;
 }
